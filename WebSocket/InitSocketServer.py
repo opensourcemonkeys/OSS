@@ -4,6 +4,7 @@ from websockets.server import serve
 
 from Business.RedisController import   RedisController
 
+
 class ClientSocket:
 
     async def echo(websocket):
@@ -15,7 +16,7 @@ class ClientSocket:
         async with serve(ClientSocket.echo, "0.0.0.0", 10100):
             await asyncio.Future()  # run forever
 
-class initServer:
+class InitServer:
     def startServerSequence():
         RedisController.ConnectionTest()
         asyncio.run(ClientSocket.main())
