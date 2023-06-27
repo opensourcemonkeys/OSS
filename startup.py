@@ -1,3 +1,3 @@
-from WebSocket.InitSocketServer   import initServer
+from WebSocket.InitSocketServer   import InitServer
 
-initServer.startServerSequence()
+InitServer.startServerSequence()
