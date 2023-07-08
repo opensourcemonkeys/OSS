@@ -9,15 +9,19 @@ class ClientBaseDataModel:
         clientId:str
         data:str
         treeAxisObjectCoordinates:TreeAxisObjectCoordinates
+        itemRedistributeIntervalMillisecond:int
         isServerPresentData:bool
-class SystemDistributeMode:
-        replicated:int=1
-        shared:int=2
-        bothof:int=3
+class ClientRegisterDataModel:
+        clientId:str
+        systemId:str
+class TopicDataModel:
+        topicId:str
+        adminClientIds:list[str]
+        clientIds:list[str]
+        isPrivateTopic:bool
+        privateTopicPasscode:str
+
+
 class SystemBaseDataModel:
-        distributedNode:SystemDistributeMode
         distributeMode:int 
         systemItemId:str
-
-
-        

@@ -14,6 +14,7 @@ from Model.RedisDictionaryModel import ClientBaseDataModel ,TreeAxisObjectCoordi
 
 class RedisController:
     systemItemPrefix="OSS"
+    systemClientRegisterPrefix="ClientRegister"
     async def setItemTest(data):
         result= RedisController.setData(data)
         print(result)
@@ -66,11 +67,10 @@ class RedisController:
             )
         )
 
-        rd.json().set(itemId, Path.root_path(), data)
-        rd.close()
-        return itemId
 
-    def dropData(topicID):
+
+
+    def dropData(topicID:str):
         pool = redis.ConnectionPool(host='localhost', port=6379, db=0)
         rd = redis.Redis(connection_pool=pool)
         rd.delete(topicID)
@@ -90,4 +90,66 @@ class RedisController:
             return result
         
 
+    def setDataClientRegister(clientId:str):
+        keyprefix=RedisController.systemItemPrefix+ RedisController.systemClientRegisterPrefix
+        pool = redis.ConnectionPool(host='localhost', port=6379, db=0)
+        rd = redis.Redis(connection_pool=pool)
+        itemId=  keyprefix + str(uuid.uuid4())
+        systemId=str(uuid.uuid4()).replace("-","")
+        rs=rd.ft("idx:"+keyprefix)
+        schema = (
+            TextField("$.clientId", as_name="clientId"),
+            TextField("$.systemId", as_name="systemId"),
+        )
+        rs.create_index(
+            schema,
+            definition=IndexDefinition(
+                prefix=[keyprefix], index_type=IndexType.JSON
+            )
+        )
+        data= {
+            "clientId":clientId,
+            "systemId":systemId,
+            "registerDate":str(datetime.now())
+        }
+        rd.json().set(itemId, Path.root_path(), data)
+        rd.close()
+        return systemId
     
+    def GetDataClientRegisterFromSystemId(systemId:str=None,enableContainFilter:bool=True):
+        keyprefix=RedisController.systemItemPrefix+ RedisController.systemClientRegisterPrefix
+        pool = redis.ConnectionPool(host='localhost', port=6379, db=0)
+        rd = redis.Redis(connection_pool=pool)
+        rs = rd.ft("idx:"+keyprefix)
+        ### todo not tested
+        if enableContainFilter:
+            
+            result=rs.search( Query(systemId),
+                             
+                             ).docs
+            return result
+
+    def DropDataClientRegister(clientId:str,topicId:str):
+        keyprefix=RedisController.systemItemPrefix+ RedisController.systemClientRegisterPrefix
+        pool = redis.ConnectionPool(host='localhost', port=6379, db=0)
+        rd = redis.Redis(connection_pool=pool)
+        itemId=  keyprefix + str(uuid.uuid4())
+        rs=rd.ft("idx:"+keyprefix)
+        schema = (
+            TextField("$.topicId", as_name="topicId"),
+            TextField("$.clientId", as_name="clientId"),
+        )
+        rs.create_index(
+            schema,
+            definition=IndexDefinition(
+                prefix=[keyprefix], index_type=IndexType.JSON
+            )
+        )
+        data= {
+            "topicId":topicId,
+            "clientId":clientId,
+
+        }
+        rd.json().set(itemId, Path.root_path(), data)
+        rd.close()
+        return itemId
