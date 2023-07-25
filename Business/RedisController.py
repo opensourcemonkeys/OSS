@@ -14,12 +14,12 @@ from Model.RedisDictionaryModel import ClientBaseDataModel, TreeAxisObjectCoordi
 
 class RedisConnectionOperators:
     def ConnectionPool():
-        pool = redis.ConnectionPool(host='redis-stack-server', port=6379, db=0)
+        pool = redis.ConnectionPool(host='localhost', port=6379, db=0)
         rd = redis.Redis(connection_pool=pool)
         return rd
 
     def CreateRedisJsonIndex(fields=[TextField], indexItemKeyPrefix=str):
-        pool = redis.ConnectionPool(host='redis-stack-server', port=6379, db=0)
+        pool = redis.ConnectionPool(host='localhost', port=6379, db=0)
         rd = redis.Redis(connection_pool=pool)
         rs = rd.ft("idx:"+indexItemKeyPrefix)
         schema = (fields
@@ -115,11 +115,26 @@ class RedisController:
         data = {
             "clientId": clientId,
             "systemId": systemId,
-            "registerDate": str(datetime.now())
+            "registerDate": str(datetime.now()),
+            "nodeId":""
         }
         rd.json().set(itemId, Path.root_path(), data)
         rd.close()
         return systemId
+
+    def UpdateClientNodeId(nodeId:str,clientSystemId:str):
+        keyprefix = RedisController.systemItemPrefix + \
+        RedisController.systemClientRegisterPrefix
+        pool = redis.ConnectionPool(host='localhost', port=6379, db=0)
+        rd = redis.Redis(connection_pool=pool)
+        rs = rd.ft("idx:"+keyprefix)
+        result = rs.search(Query(clientSystemId),
+                            ).docs
+        jsonData= result[0]["json"]
+        serializedData=json.loads(jsonData)
+        serializedData["nodeId"]=nodeId
+        rd.json().set(result[0].id, Path.root_path(), serializedData)
+        rd.close()
 
     def GetDataClientRegisterFromSystemId(systemId: str = None, enableContainFilter: bool = True):
         keyprefix = RedisController.systemItemPrefix + \
@@ -128,9 +143,7 @@ class RedisController:
         rd = redis.Redis(connection_pool=pool)
         rs = rd.ft("idx:"+keyprefix)
         if enableContainFilter:
-
             result = rs.search(Query(systemId),
-
                                ).docs
             return result
 

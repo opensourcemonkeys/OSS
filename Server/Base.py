@@ -44,6 +44,8 @@ async def ClientSocket(websocket: WebSocket, registerToken: str):
         socketAvailability = ClientSocketFilter.CheckSystemIdFromSocketPath(
             registerToken)
         if (socketAvailability):
+            socketPort= websocket.scope.get("server")
+            ClientSocketFilter.SetClientandServerIdtoRedis(registerToken,str(socketPort[1]))
             await websocket.accept()
     while True:
         data = await websocket.receive_text()
